@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useCallback, useState } from "react";
 import ReactFlow, {
@@ -9,6 +10,9 @@ import ReactFlow, {
   Node,
   useNodesState,
   useEdgesState,
+  getIncomers,
+  getOutgoers,
+  getConnectedEdges,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -23,11 +27,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { ReactFlowInstance } from "reactflow";
+
 interface CanvasProps {
   setSelectedNode: (node: Node | null) => void;
+  setReactFlowInstance: (instance: ReactFlowInstance | null) => void;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
+const Canvas: React.FC<CanvasProps> = ({
+  setSelectedNode,
+  setReactFlowInstance,
+}) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
@@ -100,10 +110,41 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
     setEditingNode(null);
   };
 
+  const onNodesDelete = useCallback(
+    (deleted: any) => {
+      let remainingNodes = [...nodes];
+      setEdges(
+        deleted.reduce((acc: any, node: any) => {
+          const incomers = getIncomers(node, remainingNodes, acc);
+          const outgoers = getOutgoers(node, remainingNodes, acc);
+          const connectedEdges = getConnectedEdges([node], acc);
+
+          const remainingEdges = acc.filter(
+            (edge: any) => !connectedEdges.includes(edge)
+          );
+
+          const createdEdges = incomers.flatMap(({ id: source }) =>
+            outgoers.map(({ id: target }) => ({
+              id: `${source}->${target}`,
+              source,
+              target,
+            }))
+          );
+
+          remainingNodes = remainingNodes.filter((rn) => rn.id !== node.id);
+
+          return [...remainingEdges, ...createdEdges];
+        }, edges)
+      );
+    },
+    [nodes, edges]
+  );
+
   return (
     <div className="flex-1">
       <ReactFlowProvider>
         <ReactFlow
+          onInit={setReactFlowInstance}
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
@@ -113,6 +154,7 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
           onDragOver={onDragOver}
           onNodeClick={onNodeClick}
           onNodeDoubleClick={onNodeDoubleClick}
+          onNodesDelete={onNodesDelete}
           fitView
         >
           <Background />
