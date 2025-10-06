@@ -11,6 +11,7 @@ import ReactFlow, {
   getIncomers,
   getOutgoers,
   getConnectedEdges,
+  Controls,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -39,16 +40,17 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
     setEdges,
     handleEdgesChange,
     setReactFlowInstance,
+    saveFlow,
   } = useFlow();
 
   // modal state
   const [showModal, setShowModal] = useState(false);
   const [editingNode, setEditingNode] = useState<Node | null>(null);
   const [nodeName, setNodeName] = useState("");
-
   const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
-    []
+    (params: Edge | Connection) =>
+      setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
+    [setEdges]
   );
 
   const onDrop = useCallback(
@@ -65,7 +67,7 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
 
       const newNode: Node = {
         id: `${type}-${+new Date()}`,
-        type: "default",
+        type: type,
         position,
         data: { label: `${type} node` },
       };
@@ -144,6 +146,7 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
     <div className="flex-1">
       <ReactFlowProvider>
         <ReactFlow
+          className="w-full h-full bg-gradient-to-b from-gray-50 to-white"
           onInit={setReactFlowInstance}
           nodes={nodes}
           edges={edges}
@@ -158,6 +161,7 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
           fitView
         >
           <Background />
+          <Controls />
         </ReactFlow>
       </ReactFlowProvider>
 

@@ -51,17 +51,15 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
   const handleNodesChange = useCallback(
     (changes: any) => {
       setNodes((nds) => applyNodeChanges(changes, nds));
-      saveFlow();
     },
-    [setNodes, saveFlow]
+    [setNodes]
   );
 
   const handleEdgesChange = useCallback(
     (changes: any) => {
       setEdges((eds) => applyEdgeChanges(changes, eds));
-      saveFlow();
     },
-    [setEdges, saveFlow]
+    [setEdges]
   );
 
   const handleImportFlow = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +113,14 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
       reactFlowInstance.setViewport(flow.viewport || { x: 0, y: 0, zoom: 1 });
     }
   }, [reactFlowInstance]);
+
+  // auto-save on every nodes/edges change
+  useEffect(() => {
+    if (reactFlowInstance) {
+      const flow = reactFlowInstance.toObject();
+      localStorage.setItem("flow-data", JSON.stringify(flow));
+    }
+  }, [nodes, edges, reactFlowInstance]);
 
   return (
     <FlowContext.Provider
