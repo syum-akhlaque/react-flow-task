@@ -8,8 +8,6 @@ import ReactFlow, {
   Connection,
   Edge,
   Node,
-  useNodesState,
-  useEdgesState,
   getIncomers,
   getOutgoers,
   getConnectedEdges,
@@ -26,20 +24,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { ReactFlowInstance } from "reactflow";
+import { useFlow } from "@/context/FlowContext";
 
 interface CanvasProps {
   setSelectedNode: (node: Node | null) => void;
-  setReactFlowInstance: (instance: ReactFlowInstance | null) => void;
 }
 
-const Canvas: React.FC<CanvasProps> = ({
-  setSelectedNode,
-  setReactFlowInstance,
-}) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
+  const {
+    nodes,
+    setNodes,
+    handleNodesChange,
+    edges,
+    setEdges,
+    handleEdgesChange,
+    setReactFlowInstance,
+  } = useFlow();
 
   // modal state
   const [showModal, setShowModal] = useState(false);
@@ -147,8 +147,8 @@ const Canvas: React.FC<CanvasProps> = ({
           onInit={setReactFlowInstance}
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
