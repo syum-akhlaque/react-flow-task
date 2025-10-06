@@ -26,10 +26,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFlow } from "@/context/FlowContext";
+import { CodeNode, HttpNode, SmtpNode, WebhookNode } from "./CustomNode";
 
 interface CanvasProps {
   setSelectedNode: (node: Node | null) => void;
 }
+
+const nodeTypes = {
+  webhook: WebhookNode,
+  code: CodeNode,
+  http: HttpNode,
+  smtp: SmtpNode,
+};
 
 const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
   const {
@@ -159,6 +167,7 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
           onNodeDoubleClick={onNodeDoubleClick}
           onNodesDelete={onNodesDelete}
           fitView
+          nodeTypes={nodeTypes}
         >
           <Background />
           <Controls />
