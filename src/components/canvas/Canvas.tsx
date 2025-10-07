@@ -23,10 +23,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useFlow } from "@/context/FlowContext";
 import { CodeNode, HttpNode, SmtpNode, WebhookNode } from "./CustomNode";
+import NodePropertiesForm from "../Modal/NodePropertiesForm";
 
 interface CanvasProps {
   setSelectedNodeId: Dispatch<SetStateAction<string | null>>;
@@ -104,21 +103,6 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
     setShowModal(true);
   }, []);
 
-  // submit = update node name
-  const handleSubmit = () => {
-    if (editingNode) {
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === editingNode.id
-            ? { ...n, data: { ...n.data, label: nodeName } }
-            : n
-        )
-      );
-    }
-    setShowModal(false);
-    setEditingNode(null);
-  };
-
   const onNodesDelete = useCallback(
     (deleted: any) => {
       let remainingNodes = [...nodes];
@@ -177,26 +161,43 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Node</DialogTitle>
+            <DialogTitle>
+              Edit Node – {editingNode?.type?.toUpperCase() || "Unknown"}
+            </DialogTitle>
           </DialogHeader>
+
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="nodeName" className="text-right">
-                Node Name
-              </Label>
-              <Input
-                id="nodeName"
-                value={nodeName}
-                onChange={(e) => setNodeName(e.target.value)}
-                className="col-span-3"
+            {editingNode && (
+              <NodePropertiesForm
+                type={editingNode.type || ""}
+                values={editingNode.data || {}}
+                onChange={(key, value) => {
+                  setEditingNode({
+                    ...editingNode,
+                    data: { ...editingNode.data, [key]: value },
+                  });
+                }}
               />
-            </div>
+            )}
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowModal(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>Save</Button>
+            <Button
+              onClick={() => {
+                if (editingNode) {
+                  setNodes((nds) =>
+                    nds.map((n) => (n.id === editingNode.id ? editingNode : n))
+                  );
+                }
+                setShowModal(false);
+                setEditingNode(null);
+              }}
+            >
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

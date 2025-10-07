@@ -4,8 +4,9 @@ import { FlowNode } from "@/types/flow";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useFlow } from "@/context/FlowContext";
-import { Upload, Download, Settings2 } from "lucide-react";
+import { Upload, Download, Settings2, ImageDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toPng } from "html-to-image";
 
 interface SidebarRightProps {
   selectedNodeId: string | null;
@@ -19,9 +20,32 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ selectedNodeId }) => {
     setCurrentNode(nodes.find((n) => n.id === selectedNodeId) || null);
   }, [nodes, selectedNodeId]);
 
+  const handleExportAsPNG = async () => {
+    const flowWrapper = document.querySelector(
+      ".react-flow__viewport"
+    ) as HTMLElement;
+    if (!flowWrapper) return;
+
+    try {
+      const dataUrl = await toPng(flowWrapper, {
+        backgroundColor: "white",
+        pixelRatio: 2,
+      });
+
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "flow-diagram.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("PNG export failed:", error);
+    }
+  };
+
   return (
     <div
-      className="w-[260px] h-screen border-l border-gray-200 flex flex-col justify-between 
+      className="w-[270px] h-screen border-l border-gray-200 flex flex-col justify-between 
       bg-gradient-to-b from-white via-blue-50 to-blue-100"
     >
       {/* 🔹 Header Section */}
@@ -30,17 +54,18 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ selectedNodeId }) => {
           Flow Controls
         </h2>
 
-        <div className="flex items-center gap-2">
+        {/* 🔹 Top Row: Export & Import JSON */}
+        <div className="flex gap-2 w-full">
           <Button
             onClick={handleExportFlow}
             size="sm"
             variant="outline"
-            className="flex items-center gap-1 bg-gray-100 "
+            className="flex-1 flex items-center justify-center gap-1 bg-gray-50 hover:bg-gray-100 border-gray-300"
           >
             <Download size={14} /> Export
           </Button>
 
-          <label className="flex items-center gap-1 cursor-pointer text-sm bg-gray-100 px-3 py-1.5 rounded-md border hover:bg-gray-200 transition">
+          <label className="flex-1 flex items-center justify-center gap-1 text-sm bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-100 cursor-pointer transition">
             <Upload size={14} />
             Import
             <Input
@@ -51,6 +76,16 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ selectedNodeId }) => {
             />
           </label>
         </div>
+
+        {/* 🔹 Export PNG button */}
+        <Button
+          onClick={handleExportAsPNG}
+          size="sm"
+          variant="outline"
+          className="w-full flex items-center justify-center gap-1 bg-gray-50 hover:bg-gray-100 border-gray-300"
+        >
+          <ImageDown size={14} /> Export as PNG
+        </Button>
       </div>
 
       {/* 🔹 Node Info Section */}
@@ -99,7 +134,7 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ selectedNodeId }) => {
         )}
       </div>
 
-      {/*  Footer */}
+      {/* Footer */}
       <div className="p-3 text-center text-xs text-gray-400 border-t border-gray-200">
         Flow Builder © {new Date().getFullYear()}
       </div>
