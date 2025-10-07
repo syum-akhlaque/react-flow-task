@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Handle, Position } from "reactflow";
-import { Globe, Code2, Link, Mail } from "lucide-react"; // Lucide icons
+import { Globe, Code2, Link, Mail } from "lucide-react";
 
 interface NodeProps {
   data: { label: string };

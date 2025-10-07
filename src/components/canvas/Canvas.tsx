@@ -15,17 +15,9 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useFlow } from "@/context/FlowContext";
 import { CodeNode, HttpNode, SmtpNode, WebhookNode } from "./CustomNode";
-import NodePropertiesForm from "../Modal/NodePropertiesForm";
+import NodeConfigModal from "../Modal/NodeConfigModal";
 
 interface CanvasProps {
   setSelectedNodeId: Dispatch<SetStateAction<string | null>>;
@@ -52,7 +44,6 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
   // modal state
   const [showModal, setShowModal] = useState(false);
   const [editingNode, setEditingNode] = useState<Node | null>(null);
-  const [nodeName, setNodeName] = useState("");
   const onConnect = useCallback(
     (params: Edge | Connection) =>
       setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
@@ -99,7 +90,6 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
   // double click = open modal
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
     setEditingNode(node);
-    setNodeName(node.data.label); // current label show in input
     setShowModal(true);
   }, []);
 
@@ -133,6 +123,13 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
     [nodes, edges]
   );
 
+  // modal save handler
+  const handleNodeSave = (updatedNode: Node) => {
+    setNodes((nds) =>
+      nds.map((n) => (n.id === updatedNode.id ? updatedNode : n))
+    );
+  };
+
   return (
     <div className="flex-1">
       <ReactFlowProvider>
@@ -157,50 +154,13 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
         </ReactFlow>
       </ReactFlowProvider>
 
-      {/* Modal for editing node (shadcn/ui) */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Edit Node – {editingNode?.type?.toUpperCase() || "Unknown"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            {editingNode && (
-              <NodePropertiesForm
-                type={editingNode.type || ""}
-                values={editingNode.data || {}}
-                onChange={(key, value) => {
-                  setEditingNode({
-                    ...editingNode,
-                    data: { ...editingNode.data, [key]: value },
-                  });
-                }}
-              />
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (editingNode) {
-                  setNodes((nds) =>
-                    nds.map((n) => (n.id === editingNode.id ? editingNode : n))
-                  );
-                }
-                setShowModal(false);
-                setEditingNode(null);
-              }}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Modal for editing node*/}
+      <NodeConfigModal
+        open={showModal}
+        node={editingNode}
+        onClose={() => setShowModal(false)}
+        onSave={handleNodeSave}
+      />
     </div>
   );
 };

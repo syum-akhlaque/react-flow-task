@@ -17,7 +17,9 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ selectedNodeId }) => {
   const [currentNode, setCurrentNode] = useState<FlowNode | null>(null);
 
   useEffect(() => {
-    setCurrentNode(nodes.find((n) => n.id === selectedNodeId) || null);
+    setCurrentNode(
+      (nodes.find((n) => n.id === selectedNodeId) as FlowNode) || null
+    );
   }, [nodes, selectedNodeId]);
 
   const handleExportAsPNG = async () => {

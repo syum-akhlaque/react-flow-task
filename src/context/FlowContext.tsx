@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
 import React, {
   createContext,
   useContext,
@@ -11,36 +11,38 @@ import React, {
 import {
   useNodesState,
   useEdgesState,
-  Node,
-  Edge,
   ReactFlowInstance,
+  Node,
   applyNodeChanges,
   applyEdgeChanges,
+  NodeChange,
+  EdgeChange,
 } from "reactflow";
+import { FlowNodeData, FlowEdge } from "@/types/flow";
 
 interface FlowContextType {
-  nodes: Node[];
-  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
-  edges: Edge[];
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  nodes: Node<FlowNodeData>[];
+  setNodes: React.Dispatch<React.SetStateAction<Node<FlowNodeData>[]>>;
+  edges: FlowEdge[];
+  setEdges: React.Dispatch<React.SetStateAction<FlowEdge[]>>;
   reactFlowInstance: ReactFlowInstance | null;
   setReactFlowInstance: (instance: ReactFlowInstance | null) => void;
-  handleImportFlow: (data: any) => void;
+  handleImportFlow: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleExportFlow: () => void;
   saveFlow: () => void;
-  handleNodesChange: (changes: any) => void;
-  handleEdgesChange: (changes: any) => void;
+  handleNodesChange: (changes: NodeChange[]) => void;
+  handleEdgesChange: (changes: EdgeChange[]) => void;
 }
 
 const FlowContext = createContext<FlowContextType | undefined>(undefined);
 
 export const FlowProvider = ({ children }: { children: ReactNode }) => {
-  const [nodes, setNodes] = useNodesState([]);
-  const [edges, setEdges] = useEdgesState([]);
+  const [nodes, setNodes] = useNodesState<FlowNodeData>([]);
+  const [edges, setEdges] = useEdgesState<FlowEdge[]>([]);
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
 
-  // 🔹 auto-save
+  // auto-save
   const saveFlow = useCallback(() => {
     if (!reactFlowInstance) return;
     const flow = reactFlowInstance.toObject();
@@ -49,19 +51,18 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
   }, [reactFlowInstance]);
 
   const handleNodesChange = useCallback(
-    (changes: any) => {
-      setNodes((nds) => applyNodeChanges(changes, nds));
-    },
+    (changes: NodeChange[]) =>
+      setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes]
   );
 
   const handleEdgesChange = useCallback(
-    (changes: any) => {
-      setEdges((eds) => applyEdgeChanges(changes, eds));
-    },
+    (changes: EdgeChange[]) =>
+      setEdges((eds) => applyEdgeChanges(changes, eds)),
     [setEdges]
   );
 
+  // Import flow from JSON
   const handleImportFlow = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -76,8 +77,8 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        setNodes(json.nodes);
-        setEdges(json.edges);
+        setNodes(json.nodes as Node<FlowNodeData>[]);
+        setEdges(json.edges as FlowEdge[]);
         reactFlowInstance?.setViewport(json.viewport);
 
         alert("Flow imported successfully ✅");
@@ -91,6 +92,7 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
 
   const handleExportFlow = () => {
     if (!reactFlowInstance) return;
+
     const flow = reactFlowInstance.toObject();
     const json = JSON.stringify(flow, null, 2);
 
@@ -104,6 +106,7 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
     URL.revokeObjectURL(url);
   };
 
+  // Load saved flow from localStorage on mount
   useEffect(() => {
     const storedFlow = localStorage.getItem("flow-data");
     if (storedFlow && reactFlowInstance) {
@@ -116,10 +119,9 @@ export const FlowProvider = ({ children }: { children: ReactNode }) => {
 
   // auto-save on every nodes/edges change
   useEffect(() => {
-    if (reactFlowInstance) {
-      const flow = reactFlowInstance.toObject();
-      localStorage.setItem("flow-data", JSON.stringify(flow));
-    }
+    if (!reactFlowInstance) return;
+    const flow = reactFlowInstance.toObject();
+    localStorage.setItem("flow-data", JSON.stringify(flow));
   }, [nodes, edges, reactFlowInstance]);
 
   return (
