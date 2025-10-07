@@ -1,6 +1,14 @@
 "use client";
 import React from "react";
 import { Globe, Code, Cloud, Mail } from "lucide-react";
+import { NodeType } from "@/types/flow";
+
+interface Node {
+  type: NodeType;
+  label: string;
+  icon: React.JSX.Element;
+  color: string;
+}
 
 const SidebarLeft: React.FC = () => {
   const onDragStart = (
@@ -11,7 +19,7 @@ const SidebarLeft: React.FC = () => {
     event.dataTransfer.effectAllowed = "move";
   };
 
-  const nodeTypes = [
+  const nodeTypes: Node[] = [
     {
       type: "webhook",
       label: "Webhook",

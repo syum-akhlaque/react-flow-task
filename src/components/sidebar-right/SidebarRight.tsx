@@ -5,13 +5,19 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useFlow } from "@/context/FlowContext";
 import { Upload, Download, Settings2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface SidebarRightProps {
-  node: FlowNode | null;
+  selectedNodeId: string | null;
 }
 
-const SidebarRight: React.FC<SidebarRightProps> = ({ node }) => {
-  const { handleExportFlow, handleImportFlow } = useFlow();
+const SidebarRight: React.FC<SidebarRightProps> = ({ selectedNodeId }) => {
+  const { handleExportFlow, handleImportFlow, nodes } = useFlow();
+  const [currentNode, setCurrentNode] = useState<FlowNode | null>(null);
+
+  useEffect(() => {
+    setCurrentNode(nodes.find((n) => n.id === selectedNodeId) || null);
+  }, [nodes, selectedNodeId]);
 
   return (
     <div
@@ -49,7 +55,7 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ node }) => {
 
       {/* 🔹 Node Info Section */}
       <div className="flex-1 p-4 overflow-y-auto">
-        {node ? (
+        {currentNode ? (
           <>
             <div className="flex items-center gap-2 mb-3">
               <Settings2 size={16} className="text-blue-500" />
@@ -61,16 +67,20 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ node }) => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">ID:</span>
-                <span className="font-medium text-gray-800">{node.id}</span>
+                <span className="font-medium text-gray-800">
+                  {currentNode.id}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Type:</span>
-                <span className="font-medium text-gray-800">{node.type}</span>
+                <span className="font-medium text-gray-800">
+                  {currentNode.type}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Label:</span>
                 <span className="font-medium text-gray-800">
-                  {node.data?.label}
+                  {currentNode.data?.label}
                 </span>
               </div>
             </div>
@@ -78,7 +88,7 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ node }) => {
             <div className="mt-4">
               <h4 className="text-xs uppercase text-gray-500 mb-1">Raw Data</h4>
               <pre className="bg-white/70 p-2 rounded-md text-xs border border-gray-200 overflow-x-auto">
-                {JSON.stringify(node.data, null, 2)}
+                {JSON.stringify(currentNode.data, null, 2)}
               </pre>
             </div>
           </>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { Dispatch, SetStateAction, useCallback, useState } from "react";
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -29,7 +29,7 @@ import { useFlow } from "@/context/FlowContext";
 import { CodeNode, HttpNode, SmtpNode, WebhookNode } from "./CustomNode";
 
 interface CanvasProps {
-  setSelectedNode: (node: Node | null) => void;
+  setSelectedNodeId: Dispatch<SetStateAction<string | null>>;
 }
 
 const nodeTypes = {
@@ -39,7 +39,7 @@ const nodeTypes = {
   smtp: SmtpNode,
 };
 
-const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
+const Canvas: React.FC<CanvasProps> = ({ setSelectedNodeId }) => {
   const {
     nodes,
     setNodes,
@@ -48,7 +48,6 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
     setEdges,
     handleEdgesChange,
     setReactFlowInstance,
-    saveFlow,
   } = useFlow();
 
   // modal state
@@ -93,9 +92,9 @@ const Canvas: React.FC<CanvasProps> = ({ setSelectedNode }) => {
   // single click = select node
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      setSelectedNode(node);
+      setSelectedNodeId(node.id);
     },
-    [setSelectedNode]
+    [setSelectedNodeId]
   );
 
   // double click = open modal
